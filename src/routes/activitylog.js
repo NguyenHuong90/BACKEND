@@ -50,6 +50,42 @@ router.get("/", verifyToken, async (req, res) => {
   }
 });
 
+// Thêm nhật ký hoạt động (cho lịch trình)
+router.post("/", verifyToken, async (req, res) => {
+  try {
+    console.log("POST /api/activitylog received:", req.body);
+    const { userId, action, details, source, ip, timestamp } = req.body;
+
+    if (!action || !source) {
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc (action hoặc source)" });
+    }
+
+    const log = new ActivityLog({
+      userId: userId || null, // Cho phép userId là null cho hành động lịch trình
+      action,
+      details: {
+        startTime: details?.startTime ? new Date(details.startTime) : null,
+        endTime: details?.endTime ? new Date(details.endTime) : null,
+        lampDim: details?.lampDim,
+        nodeId: details?.nodeId,
+        gwId: details?.gwId,
+        lux: details?.lux,
+        currentA: details?.currentA,
+      },
+      source,
+      ip: ip || req.ip,
+      timestamp: timestamp ? new Date(timestamp) : new Date(),
+    });
+
+    await log.save();
+    console.log("Activity log saved:", log);
+    res.json({ log });
+  } catch (err) {
+    console.error("Lỗi khi thêm nhật ký hoạt động:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Xóa toàn bộ nhật ký
 router.delete("/", verifyToken, async (req, res) => {
   try {

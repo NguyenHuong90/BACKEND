@@ -44,8 +44,8 @@ router.get("/state", verifyToken, async (req, res) => {
 
 // Điều khiển đèn
 router.post("/control", verifyToken, async (req, res) => {
-  const { gw_id, node_id, lamp_state, lamp_dim, lux, current_a } = req.body;
-  console.log("POST /api/lamp/control received:", req.body); // Log dữ liệu nhận được
+  const { gw_id, node_id, lamp_state, lamp_dim, lux, current_a, lat, lng } = req.body;
+  console.log("POST /api/lamp/control received:", req.body);
   try {
     if (!gw_id || !node_id) {
       return res.status(400).json({ message: "Thiếu gw_id hoặc node_id" });
@@ -53,7 +53,6 @@ router.post("/control", verifyToken, async (req, res) => {
 
     let lamp = await Lamp.findOne({ gw_id, node_id });
     if (!lamp) {
-      // Tạo đèn mới nếu không tìm thấy
       lamp = new Lamp({
         gw_id,
         node_id,
@@ -61,21 +60,23 @@ router.post("/control", verifyToken, async (req, res) => {
         lamp_dim: lamp_dim || 0,
         lux: lux || 0,
         current_a: current_a || 0,
+        lat: lat !== undefined ? lat : null,
+        lng: lng !== undefined ? lng : null,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     } else {
-      // Cập nhật trạng thái nếu đèn đã tồn tại
       lamp.lamp_state = lamp_state || lamp.lamp_state;
       lamp.lamp_dim = lamp_dim !== undefined ? lamp_dim : lamp.lamp_dim;
       lamp.lux = lux !== undefined ? lux : lamp.lux;
       lamp.current_a = current_a !== undefined ? current_a : lamp.current_a;
+      lamp.lat = lat !== undefined ? lat : lamp.lat;
+      lamp.lng = lng !== undefined ? lng : lamp.lng;
       lamp.updatedAt = new Date();
     }
     await lamp.save();
     console.log("Lamp state updated:", lamp);
 
-    // Gửi lệnh qua MQTT
     const payload = JSON.stringify({
       lamp_state: lamp.lamp_state,
       lamp_dim: lamp.lamp_dim,
@@ -84,19 +85,19 @@ router.post("/control", verifyToken, async (req, res) => {
     mqttClient.publish(topic, payload, { qos: 0 }, (err) => {
       if (err) {
         console.error("Lỗi khi gửi MQTT:", err);
-        return res.status(500).json({ error: "Lỗi khi gửi lệnh qua MQTT" });
       } else {
         console.log(`MQTT published to ${topic}: ${payload}`);
       }
     });
 
-    // Ghi vào ActivityLog với chi tiết
     await new ActivityLog({
       userId: req.user.id,
       action: lamp_state
         ? `set_lamp_${lamp_state.toLowerCase()}`
         : lamp_dim !== undefined
         ? `set_lamp_brightness_to_${lamp_dim}%`
+        : lat !== undefined || lng !== undefined
+        ? "update_lamp_location"
         : "update_lamp_state",
       details: {
         startTime: new Date(),
@@ -105,6 +106,8 @@ router.post("/control", verifyToken, async (req, res) => {
         currentA: lamp.current_a,
         nodeId: node_id,
         gwId: gw_id,
+        lat: lamp.lat,
+        lng: lamp.lng,
       },
       source: "manual",
       ip: req.ip,

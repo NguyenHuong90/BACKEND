@@ -7,6 +7,8 @@ const lampSchema = new mongoose.Schema({
   lamp_dim: { type: Number, min: 0, max: 100, default: 0 },
   lux: { type: Number, default: 0 },
   current_a: { type: Number, default: 0 },
+  lat: { type: Number, min: -90, max: 90 }, // Thêm trường latitude
+  lng: { type: Number, min: -180, max: 180 }, // Thêm trường longitude
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
