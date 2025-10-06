@@ -1,4 +1,4 @@
-
+/*
 const User = require('../models/User');
 const ActivityLog = require('../models/ActivityLog');
 const bcrypt = require('bcryptjs');
@@ -104,3 +104,4 @@ exports.login = async (req, res) => {
 };
 
 module.exports = { register: exports.register, login: exports.login };
+*/

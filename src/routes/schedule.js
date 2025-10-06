@@ -61,7 +61,7 @@ router.post('/', verifyToken, async (req, res) => {
       userId: req.user.id,
       action: 'add_schedule',
       details: { node_id, action, start, end, lamp_dim },
-      source: 'manual',
+      source: 'auto',
       ip: req.ip,
       timestamp: new Date(),
     }).save();
@@ -87,7 +87,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
       userId: req.user.id,
       action: 'delete_schedule',
       details: { node_id: schedule.node_id, action: schedule.action, lamp_dim: schedule.lamp_dim },
-      source: 'manual',
+      source: 'auto',
       ip: req.ip,
       timestamp: new Date(),
     }).save();

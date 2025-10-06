@@ -67,10 +67,11 @@ router.post("/", verifyToken, async (req, res) => {
         startTime: details?.startTime ? new Date(details.startTime) : null,
         endTime: details?.endTime ? new Date(details.endTime) : null,
         lampDim: details?.lampDim,
-        nodeId: details?.nodeId,
-        gwId: details?.gwId,
         lux: details?.lux,
         currentA: details?.currentA,
+        nodeId: details?.nodeId,
+        gwId: details?.gwId,
+        energyConsumed: details?.energyConsumed || 0, // Lấy energyConsumed từ details
       },
       source,
       ip: ip || req.ip,

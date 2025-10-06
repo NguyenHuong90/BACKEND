@@ -11,6 +11,7 @@ const activityLogSchema = new mongoose.Schema({
     currentA: { type: Number }, // Dòng điện (A)
     nodeId: { type: String }, // ID bóng đèn
     gwId: { type: String }, // ID gateway
+    energyConsumed: { type: Number, default: 0 }, // Năng lượng tiêu thụ (kWh)
   },
   source: { type: String, enum: ["manual", "schedule", "auto"], default: "manual" }, // Nguồn hành động
   ip: { type: String },
